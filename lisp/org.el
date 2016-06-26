@@ -6048,11 +6048,17 @@ by a #."
 (defun org-activate-bracket-links (limit)
   "Add text properties for bracketed links."
   (if (and (re-search-forward org-bracket-link-regexp limit t)
-	   (not (org-in-src-block-p)))
+	   (not (org-in-src-block-p))) 
       (let* ((hl (org-match-string-no-properties 1))
 	     (help (concat "LINK: " (save-match-data (org-link-unescape hl))))
+	     (type (save-match-data
+		     (string-match "\\(.*?\\):" hl)
+		     (match-string 1 hl)))
 	     (ip (org-maybe-intangible
-		  (list 'invisible 'org-link
+		  (list 'invisible (let ((li (intern (format
+						      "org-link-%s-invisibility"
+						      type)))) 
+				     (if (boundp li) (symbol-value li) 'org-link))
 			'keymap org-mouse-map 'mouse-face 'highlight
 			'font-lock-multiline t 'help-echo help
 			'htmlize-link `(:uri ,hl))))
