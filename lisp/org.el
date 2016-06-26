@@ -5851,14 +5851,19 @@ prompted for."
   "Add link properties for plain links."
   (when (and (re-search-forward org-plain-link-re limit t)
 	     (not (org-in-src-block-p)))
-    (let ((face (get-text-property (max (1- (match-beginning 0)) (point-min))
-				   'face))
-	  (link (org-match-string-no-properties 0)))
+    (let* ((face (get-text-property (max (1- (match-beginning 0)) (point-min))
+				    'face))
+	   (link (org-match-string-no-properties 0))
+	   (type (org-match-string-no-properties 1))
+	   (link-face-symbol (intern (format "org-link-%s" type)))
+	   (link-face (if (facep link-face-symbol)
+			  link-face-symbol
+			'org-link)))
       (unless (if (consp face) (memq 'org-tag face) (eq 'org-tag face))
 	(org-remove-flyspell-overlays-in (match-beginning 0) (match-end 0))
 	(add-text-properties (match-beginning 0) (match-end 0)
 			     (list 'mouse-face 'highlight
-				   'face 'org-link
+				   'face link-face
 				   'htmlize-link `(:uri ,link)
 				   'keymap org-mouse-map))
 	(org-rear-nonsticky-at (match-end 0))
@@ -6340,8 +6345,8 @@ needs to be inserted at a specific position in the font-lock sequence.")
 	   ;; Links
 	   (if (memq 'tag lk) '(org-activate-tags (1 'org-tag prepend)))
 	   (if (memq 'angle lk) '(org-activate-angle-links (0 'org-link t)))
-	   (if (memq 'plain lk) '(org-activate-plain-links (0 'org-link t)))
-	   (if (memq 'bracket lk) '(org-activate-bracket-links (0 'org-link t)))
+	   (if (memq 'plain lk) '(org-activate-plain-links (0 'org-link)))
+	   (if (memq 'bracket lk) '(org-activate-bracket-links (0 'org-link)))
 	   (if (memq 'radio lk) '(org-activate-target-links (1 'org-link t)))
 	   (if (memq 'date lk) '(org-activate-dates (0 'org-date t)))
 	   (if (memq 'footnote lk) '(org-activate-footnote-links))
