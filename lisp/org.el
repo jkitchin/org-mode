@@ -1867,6 +1867,18 @@ return the description to use."
   :tag "Org Store Link"
   :group 'org-link)
 
+(defcustom org-link-display-parameters nil 
+  "An alist of properties to display a link with.
+The first element in each list is a string of the link
+type. Subsequent optional elements make up a p-list. :face can be
+used to change the face on the link (the default is
+`org-link'. If :display is 'full the full link will show in
+descriptive link mode."
+  :type '(alist :tag "Link display paramters"
+		:key-type 'string
+		:value-type '(plist))
+  :group 'org-link)
+
 (defcustom org-url-hexify-p t
   "When non-nil, hexify URL when creating a link."
   :type 'boolean
@@ -5886,14 +5898,19 @@ prompted for."
   "Add link properties for plain links."
   (when (and (re-search-forward org-plain-link-re limit t)
 	     (not (org-in-src-block-p)))
+
     (let ((face (get-text-property (max (1- (match-beginning 0)) (point-min))
 				   'face))
-	  (link (match-string-no-properties 0)))
+	  (link (match-string-no-properties 0))
+	  (type (match-string-no-properties 1)))
       (unless (if (consp face) (memq 'org-tag face) (eq 'org-tag face))
 	(org-remove-flyspell-overlays-in (match-beginning 0) (match-end 0))
 	(add-text-properties (match-beginning 0) (match-end 0)
 			     (list 'mouse-face 'highlight
-				   'face 'org-link
+				   'face (or (plist-get
+					      (cdr (assoc type org-link-display-parameters))
+					      :face)
+					     'org-link)
 				   'htmlize-link `(:uri ,link)
 				   'keymap org-mouse-map))
 	(org-rear-nonsticky-at (match-end 0))
@@ -6087,7 +6104,10 @@ by a #."
 	     (not (org-in-src-block-p)))
     (let* ((hl (match-string-no-properties 1))
 	   (help (concat "LINK: " (save-match-data (org-link-unescape hl))))
-	   (ip (list 'invisible 'org-link
+	   (ip (list 'invisible (or (plist-get
+				     (cdr (assoc type org-link-display-parameters))
+				     :display)
+				    'org-link)
 		     'keymap org-mouse-map 'mouse-face 'highlight
 		     'font-lock-multiline t 'help-echo help
 		     'htmlize-link `(:uri ,hl)))
@@ -6384,8 +6404,8 @@ needs to be inserted at a specific position in the font-lock sequence.")
 	   ;; Links
 	   (when (memq 'tag lk) '(org-activate-tags (1 'org-tag prepend)))
 	   (when (memq 'angle lk) '(org-activate-angle-links (0 'org-link t)))
-	   (when (memq 'plain lk) '(org-activate-plain-links (0 'org-link t)))
-	   (when (memq 'bracket lk) '(org-activate-bracket-links (0 'org-link t)))
+	   (when (memq 'plain lk) '(org-activate-plain-links (0 'org-link)))
+	   (when (memq 'bracket lk) '(org-activate-bracket-links (0 'org-link)))
 	   (when (memq 'radio lk) '(org-activate-target-links (1 'org-link t)))
 	   (when (memq 'date lk) '(org-activate-dates (0 'org-date t)))
 	   (when (memq 'footnote lk) '(org-activate-footnote-links))
