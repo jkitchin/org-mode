@@ -6081,6 +6081,9 @@ by a #."
   (when (and (re-search-forward org-bracket-link-regexp limit t)
 	     (not (org-in-src-block-p)))
     (let* ((hl (match-string-no-properties 1))
+	   (type (save-match-data
+		   (string-match "\\(.*?\\):" hl)
+		   (match-string 1 hl)))
 	   (help (concat "LINK: " (save-match-data (org-link-unescape hl))))
 	   (ip (list 'invisible (or (plist-get
 				     (cdr (assoc type org-link-display-parameters))
