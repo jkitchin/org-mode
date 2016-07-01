@@ -1873,7 +1873,9 @@ The first element in each list is a string of the link
 type. Subsequent optional elements make up a p-list. :face can be
 used to change the face on the link (the default is
 `org-link'. If :display is 'full the full link will show in
-descriptive link mode."
+descriptive link mode. :help-echo can be either a string or a function
+that returns a string. That function should have args of (begin
+end type path) and it should return a string."
   :type '(alist :tag "Link display paramters"
 		:key-type 'string
 		:value-type '(plist))
@@ -5877,10 +5879,14 @@ prompted for."
   (when (and (re-search-forward org-plain-link-re limit t)
 	     (not (org-in-src-block-p)))
 
-    (let ((face (get-text-property (max (1- (match-beginning 0)) (point-min))
-				   'face))
-	  (link (match-string-no-properties 0))
-	  (type (match-string-no-properties 1)))
+    (let* ((face (get-text-property (max (1- (match-beginning 0)) (point-min))
+				    'face))
+	   (link (match-string-no-properties 0))
+	   (type (match-string-no-properties 1))
+	   (path (match-string-no-properties 2))
+	   (help-echo (plist-get
+		       (cdr (assoc type org-link-display-parameters))
+		       :help-echo)))
       (unless (if (consp face) (memq 'org-tag face) (eq 'org-tag face))
 	(org-remove-flyspell-overlays-in (match-beginning 0) (match-end 0))
 	(add-text-properties (match-beginning 0) (match-end 0)
@@ -5889,6 +5895,15 @@ prompted for."
 					      (cdr (assoc type org-link-display-parameters))
 					      :face)
 					     'org-link)
+				   'help-echo (cond
+					       ((stringp help-echo)
+						help-echo)
+					       ((functionp help-echo)
+						(funcall help-echo
+							 (match-beginning 0)
+							 (match-end 0)
+							 type path))
+					       (t nil))
 				   'htmlize-link `(:uri ,link)
 				   'keymap org-mouse-map))
 	(org-rear-nonsticky-at (match-end 0))
@@ -6084,13 +6099,31 @@ by a #."
 	   (type (save-match-data
 		   (string-match "\\(.*?\\):" hl)
 		   (match-string 1 hl)))
-	   (help (concat "LINK: " (save-match-data (org-link-unescape hl))))
+	   (path (save-match-data
+		   (string-match ".*:\\(.*\\)" hl)
+		   (match-string 1 hl)))
+	   (help-echo (plist-get
+		       (cdr (assoc type org-link-display-parameters))
+		       :help-echo))
+	   (help (cond
+		  ((stringp help-echo)
+		   help-echo)
+		  ((functionp help-echo)
+		   (funcall help-echo
+			    (match-beginning 0)
+			    (match-end 0)
+			    type path))
+		  (t
+		   (concat "LINK: "
+			   (save-match-data
+			     (org-link-unescape hl))))))
 	   (ip (list 'invisible (or (plist-get
 				     (cdr (assoc type org-link-display-parameters))
 				     :display)
 				    'org-link)
 		     'keymap org-mouse-map 'mouse-face 'highlight
-		     'font-lock-multiline t 'help-echo help
+		     'font-lock-multiline t
+		     'help-echo help
 		     'htmlize-link `(:uri ,hl)))
 	   (vp (list 'keymap org-mouse-map 'mouse-face 'highlight
 		     'font-lock-multiline t 'help-echo help
