@@ -10742,7 +10742,7 @@ link in a property drawer line."
 	       ((equal type "file")
 		(if (string-match "[*?{]" (file-name-nondirectory path))
 		    (dired path)
-		  ;; Look into `org-link-protocols' in order to find
+		  ;; Look into `org-link-parameters' in order to find
 		  ;; a DEDICATED-FUNCTION to open file.  The function
 		  ;; will be applied on raw link instead of parsed
 		  ;; link due to the limitation in `org-add-link-type'
@@ -10756,7 +10756,7 @@ link in a property drawer line."
 		  (let* ((option (org-element-property :search-option link))
 			 (app (org-element-property :application link))
 			 (dedicated-function
-			  (nth 1 (assoc app org-link-protocols))))
+			  (org-link-get-parameter type :follow)))
 		    (if dedicated-function
 			(funcall dedicated-function
 				 (concat path
@@ -10771,8 +10771,8 @@ link in a property drawer line."
 				    (list (string-to-number option)))
 				   (t (list nil
 					    (org-link-unescape option)))))))))
-	       ((assoc type org-link-protocols)
-		(funcall (nth 1 (assoc type org-link-protocols)) path))
+	       ((functionp (org-link-get-parameter type :follow))
+		(funcall (org-link-get-parameter type :follow) path))
 	       ((equal type "help")
 		(let ((f-or-v (intern path)))
 		  (cond ((fboundp f-or-v) (describe-function f-or-v))
@@ -10821,7 +10821,7 @@ link in a property drawer line."
 		    (user-error "Abort"))))
 	       ((equal type "id")
 		(require 'org-id)
-		(funcall (nth 1 (assoc "id" org-link-protocols)) path))
+		(funcall (org-link-get-parameter type :follow) path))
 	       ((member type '("coderef" "custom-id" "fuzzy" "radio"))
 		(unless (run-hook-with-args-until-success
 			 'org-open-link-functions path)
