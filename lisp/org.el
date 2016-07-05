@@ -5658,9 +5658,6 @@ the rounding returns a past time."
 (require 'font-lock)
 
 (defconst org-non-link-chars "]\t\n\r<>")
-(defvar org-link-types '("http" "https" "ftp" "mailto" "file" "file+emacs"
-			 "file+sys" "news" "shell" "elisp" "doi" "message"
-			 "help"))
 (defvar org-link-types-re nil
   "Matches a link that has a url-like prefix like \"http:\"")
 (defvar org-link-re-with-space nil
@@ -5727,8 +5724,8 @@ stacked delimiters is N.  Escaping delimiters is not possible."
 
 (defun org-make-link-regexps ()
   "Update the link regular expressions.
-This should be called after the variable `org-link-types' has changed."
-  (let ((types-re (regexp-opt org-link-types t)))
+This should be called after the variable `org-link-parameters' has changed."
+  (let ((types-re (regexp-opt (org-link-types) t)))
     (setq org-link-types-re
 	  (concat "\\`" types-re ":")
 	  org-link-re-with-space
@@ -5766,7 +5763,7 @@ This should be called after the variable `org-link-types' has changed."
 	  org-bracket-link-analytic-regexp++
 	  (concat
 	   "\\[\\["
-	   "\\(" (regexp-opt (cons "coderef" org-link-types) t) ":\\)?"
+	   "\\(" (regexp-opt (cons "coderef" (org-link-types)) t) ":\\)?"
 	   "\\([^]]+\\)"
 	   "\\]"
 	   "\\(\\[" "\\([^]]+\\)" "\\]\\)?"
@@ -10325,7 +10322,7 @@ Use TAB to complete link prefixes, then RET for type-specific completion support
 	(and (window-live-p cw) (select-window cw)))
       (setq all-prefixes (append (mapcar 'car abbrevs)
 				 (mapcar 'car org-link-abbrev-alist)
-				 org-link-types))
+				 (org-link-types)))
       (unwind-protect
 	  ;; Fake a link history, containing the stored links.
 	  (let ((org--links-history

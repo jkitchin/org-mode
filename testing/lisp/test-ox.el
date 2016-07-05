@@ -2571,7 +2571,7 @@ Para2"
   (should
    (string-match
     "success"
-    (let ((org-link-types (copy-sequence org-link-types)))
+    (let ((org-link-types (org-link-types)))
       (org-add-link-type "foo" nil (lambda (p d f) "success"))
       (org-export-string-as
        "[[foo:path]]"
@@ -2586,7 +2586,7 @@ Para2"
   (should-not
    (string-match
     "success"
-    (let ((org-link-types (copy-sequence org-link-types)))
+    (let ((org-link-types (org-link-types)))
       (org-add-link-type
        "foo" nil (lambda (p d f) (and (eq f 'test) "success")))
       (org-export-string-as
@@ -2603,7 +2603,7 @@ Para2"
   (should-not
    (string-match
     "success"
-    (let ((org-link-types (copy-sequence org-link-types)))
+    (let ((org-link-types (org-link-types)))
       (org-add-link-type
        "foo" nil (lambda (p d f) (and (eq f 'test) "success")))
       (org-export-string-as
