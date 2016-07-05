@@ -1758,6 +1758,75 @@ calls `table-recognize-table'."
   "Buffer-local version of `org-link-abbrev-alist', which see.
 The value of this is taken from the #+LINK lines.")
 
+(defcustom org-link-parameters
+  '(("http") ("https") ("ftp") ("mailto")
+    ("file" :complete 'org-file-complete-link)
+    ("file+emacs") ("file+sys")
+    ("news") ("shell") ("elisp")
+    ("doi") ("message") ("help"))
+  "An alist of properties that defines all the links in Org mode.
+The key in each association is a string of the link type.
+Subsequent optional elements make up a p-list of link properties.
+
+:follow - A function that takes the link path as an argument.
+
+:export - A function that takes the link path, description and
+export-backend as arguments.
+
+:store - A function responsible for storing the link.  See the
+variable `org-store-link-functions'.
+
+:complete - A function that inserts a link with completion.  The
+function takes one optional prefix arg.
+
+:face - A face for the link, or a function that returns a face.
+The function takes one argument which is the link path.  The
+default face is `org-link'.
+
+:mouse-face - The mouse-face. The default is `highlight'.
+
+:display - `full' will not fold the link in descriptive
+display.  Default is `org-link'.
+
+:help-echo - A string or function that takes (window object position)
+as args and returns a string.
+
+:keymap - A keymap that is active on the link.  The default is
+`org-mouse-map'.
+
+:htmlize-link - A function for the htmlize-link.  Defaults
+to (list :uri \"type:path\")
+
+:activate-func - A function to run at the end of font-lock
+activation. The function must accept (link-start link-end path bracketp) 
+as arguments."
+  :group 'org-link
+  :type '(alist :tag "Link display paramters"
+		:value-type (plist)))
+
+(defun org-link-get-parameter (type key)
+  "Get TYPE link property for KEY."
+  (plist-get
+   (cdr (assoc type org-link-parameters))
+   key))
+
+(defun org-link-set-parameters (type &rest parameters)
+  "Set link TYPE properties to PARAMETERS.
+  PARAMETERS should be :key val pairs."
+  (let ((data (assoc type org-link-parameters)))
+    (if data
+	(cl-loop for (key val) on parameters by #'cddr
+	   do
+	   (setf (cl-getf (cdr data) key)
+		 val))
+      (push (cons type parameters) org-link-parameters)
+      (org-make-link-regexps)
+      (org-element-update-syntax))))
+    
+(defun org-link-types ()
+  "Returns a list of known link types."
+  (mapcar #'car org-link-parameters))
+
 (defcustom org-link-abbrev-alist nil
   "Alist of link abbreviations.
 The car of each element is a string, to be replaced at the start of a link.
@@ -5490,7 +5559,7 @@ The following commands are available:
      org-display-table 4
      (vconcat (mapcar
 	       (lambda (c) (make-glyph-code c (and (not (stringp org-ellipsis))
-					      org-ellipsis)))
+						   org-ellipsis)))
 	       (if (stringp org-ellipsis) org-ellipsis "..."))))
     (setq buffer-display-table org-display-table))
   (org-set-regexps-and-options)
@@ -7390,7 +7459,7 @@ a block.  Return a non-nil value when toggling is successful."
 ;; Remove overlays when changing major mode
 (add-hook 'org-mode-hook
 	  (lambda () (add-hook 'change-major-mode-hook
-			  'org-show-block-all 'append 'local)))
+			       'org-show-block-all 'append 'local)))
 
 ;;; Org-goto
 
