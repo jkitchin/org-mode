@@ -9752,37 +9752,37 @@ Special properties are:
 In addition to these, any additional properties can be specified
 and then used in capture templates.")
 
-(defun org-add-link-type (type &optional follow export)
-  "Add TYPE to the list of `org-link-types'.
-Re-compute all regular expressions depending on `org-link-types'
 
-FOLLOW and EXPORT are two functions.
+(defun org-store-link-functions ()
+  "Returns a list of functions that are called to create and store a link.
+The functions in the variable `org-store-link-functions' come
+first. These may be user-defined for different contexts. Then
+comes the functions defined in the :store property of
+org-link-parameters.
 
-FOLLOW should take the link path as the single argument and do whatever
-is necessary to follow the link, for example find a file or display
-a mail message.
+Each function will be called in turn until one returns a non-nil
+value. Each function should check if it is responsible for
+creating this link (for example by looking at the major mode). If
+not, it must exit and return nil. If yes, it should return a
+non-nil value after a calling `org-store-link-props' with a list
+of properties and values. Special properties are:
 
-EXPORT should format the link path for export to one of the export formats.
-It should be a function accepting three arguments:
+:type         The link prefix, like \"http\".  This must be given.
+:link         The link, like \"http://www.astro.uva.nl/~dominik\".
+              This is obligatory as well.
+:description  Optional default description for the second pair
+              of brackets in an Org-mode link.  The user can still change
+              this when inserting this link into an Org-mode buffer.
 
-  path    the path of the link, the text after the prefix (like \"http:\")
-  desc    the description of the link, if any
-  format  the export format, a symbol like `html' or `latex' or `ascii'.
-
-The function may use the FORMAT information to return different values
-depending on the format.  The return value will be put literally into
-the exported file.  If the return value is nil, this means Org should
-do what it normally does with links which do not have EXPORT defined.
-
-Org mode has a built-in default for exporting links.  If you are happy with
-this default, there is no need to define an export function for the link
-type.  For a simple example of an export function, see `org-bbdb.el'."
-  (add-to-list 'org-link-types type t)
-  (org-make-link-regexps)
-  (org-element-update-syntax)
-  (if (assoc type org-link-protocols)
-      (setcdr (assoc type org-link-protocols) (list follow export))
-    (push (list type follow export) org-link-protocols)))
+In addition to these, any additional properties can be specified
+and then used in capture templates."
+  (append
+   org-store-link-functions
+   (cl-loop for link in org-link-parameters
+	    with store-func
+	    do (setq store-func (org-link-get-parameter (car link) :store))
+	    if store-func
+	    collect store-func)))
 
 (defvar org-agenda-buffer-name) ; Defined in org-agenda.el
 (defvar org-id-link-to-org-use-id) ; Defined in org-id.el
